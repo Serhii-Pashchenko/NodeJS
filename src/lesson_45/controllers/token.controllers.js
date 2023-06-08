@@ -27,9 +27,7 @@ class TokenController {
   }
   async deleteToken(req, res) {
     const id = req.params.id;
-    // if (req.query.login === 'admin' && req.query.password === '12345') {
     const user = await db.query('DELETE FROM tokens WHERE id = $1', [id]);
-    // }
     res.json(user.rows[0]);
   }
 }

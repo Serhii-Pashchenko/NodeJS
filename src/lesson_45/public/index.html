@@ -37,7 +37,7 @@
     </table>
 
     <script>
-      // Отримання списку користувачів
+      // Створення таблиці і отримання списку користувачів
       async function CreateTable() {
         const response = await fetch('/api/users', {
           method: 'GET',
@@ -62,31 +62,7 @@
               .catch((error) => {
                 console.log('Помилка отримання токена: ', error);
               });
-
-            //   const element = document.querySelector(
-            //   "td[data-token='" + userId + "']"
-            // );
-            // if (element === true && tokens.length > 0) {
-            //   element.replaceWith(tokens[tokens.length - 1].token);
-            // }
-            // if (element === true && tokens.length === 0) {
-            //   element.replaceWith('');
-            // }
-
-            // document
-            //   .querySelector("td[data-token='" + user.id + "']")
-            //   .replaceWith(token);
           }
-          // users.forEach((user) => {
-          //   rows.append(row(user));
-          //   const token = await GetTokenByUserId(user.id);
-          //   document.querySelector("td[data-token='" + user.id + "']").replaceWith(token);
-          //   // GetTokenByUserId(user.id).then((token) => {
-          //   //   document
-          //   //     .querySelector("td[data-token='" + user.id + "']")
-          //   //     .replaceWith(token);
-          //   // });
-          // });
         }
       }
       // Отримання одного користувача
@@ -140,7 +116,6 @@
         if (response.ok === true) {
           const tokens = await response.json();
           if (tokens.length > 0) {
-            // const latestToken = tokens[tokens.length - 1].token;
             return tokens;
           }
           return '';
@@ -166,6 +141,7 @@
           document.querySelector('tbody').append(row(user));
         }
       }
+
       // Зміна користувача
       async function EditUser(userId, userName) {
         const response = await fetch('api/users/' + userId, {
@@ -186,6 +162,7 @@
             .replaceWith(row(user));
         }
       }
+
       // Видалення користувача
       async function DeleteUser(id) {
         const response = await fetch(
@@ -216,16 +193,6 @@
             console.log('Помилка отримання токена: ', error);
           });
       }
-
-      // const response = await fetch('api/tokens?id=' + userId + '', {
-      //           method: 'DELETE',
-      //           headers: { Accept: 'application/json' },
-      //         });
-      //         if (response.ok === true) {
-      //           document.querySelector(
-      //             "td[data-token='" + userId + "']"
-      //           ).textContent = '';
-      //         }
 
       async function DeleteTokenById(userId, tokenId) {
         const response = await fetch('/api/tokens/' + tokenId, {
