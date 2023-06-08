@@ -38,7 +38,7 @@
 
     <script>
       // Отримання списку користувачів
-      async function GetUsers() {
+      async function CreateTable() {
         const response = await fetch('/api/users', {
           method: 'GET',
           headers: { Accept: 'application/json' },
@@ -46,9 +46,47 @@
         if (response.ok === true) {
           const users = await response.json();
           let rows = document.querySelector('tbody');
-          users.forEach((user) => {
+          for (const user of users) {
             rows.append(row(user));
-          });
+            const element = document.querySelector(
+              "td[data-token='" + user.id + "']"
+            );
+            GetTokenByUserId(user.id)
+              .then((token) => {
+                if (element && token !== '') {
+                  element.textContent = token[token.length - 1].token;
+                } else {
+                  element.textContent = '';
+                }
+              })
+              .catch((error) => {
+                console.log('Помилка отримання токена: ', error);
+              });
+
+            //   const element = document.querySelector(
+            //   "td[data-token='" + userId + "']"
+            // );
+            // if (element === true && tokens.length > 0) {
+            //   element.replaceWith(tokens[tokens.length - 1].token);
+            // }
+            // if (element === true && tokens.length === 0) {
+            //   element.replaceWith('');
+            // }
+
+            // document
+            //   .querySelector("td[data-token='" + user.id + "']")
+            //   .replaceWith(token);
+          }
+          // users.forEach((user) => {
+          //   rows.append(row(user));
+          //   const token = await GetTokenByUserId(user.id);
+          //   document.querySelector("td[data-token='" + user.id + "']").replaceWith(token);
+          //   // GetTokenByUserId(user.id).then((token) => {
+          //   //   document
+          //   //     .querySelector("td[data-token='" + user.id + "']")
+          //   //     .replaceWith(token);
+          //   // });
+          // });
         }
       }
       // Отримання одного користувача
@@ -64,32 +102,51 @@
           form.elements['name'].value = user.name;
         }
       }
-      async function CreateToken(userId, userName) {
-        const response = await fetch('api/users', {
-          method: 'PUT',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            id: userId,
-            name: userName,
-            token: generateToken(userName),
-          }),
-        });
-        if (response.ok === true) {
-          const user = await response.json();
-          reset();
-          document
-            .querySelector("tr[data-rowid='" + user.id + "']")
-            .replaceWith(row(user));
-        }
-      }
+
       // Генерація токену
       const generateToken = (name) => {
         const token = `${name}-${Math.random().toString(36).substr(2, 10)}`;
         return token;
       };
+
+      async function CreateToken(userId, userName) {
+        const response = await fetch('api/tokens', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            token: generateToken(userName),
+          }),
+        });
+        if (response.ok === true) {
+          const token = await response.json();
+          document.querySelector(
+            "td[data-token='" + userId + "']"
+          ).textContent = token.token;
+        }
+      }
+
+      async function GetTokenByUserId(userId) {
+        const response = await fetch('api/tokens?id=' + userId, {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        });
+        if (response.ok === true) {
+          const tokens = await response.json();
+          if (tokens.length > 0) {
+            // const latestToken = tokens[tokens.length - 1].token;
+            return tokens;
+          }
+          return '';
+        }
+        return '';
+      }
 
       // Додавання користувача
       async function CreateUser(userName) {
@@ -101,7 +158,6 @@
           },
           body: JSON.stringify({
             name: userName,
-            token: generateToken(userName),
           }),
         });
         if (response.ok === true) {
@@ -112,16 +168,14 @@
       }
       // Зміна користувача
       async function EditUser(userId, userName) {
-        const response = await fetch('api/users', {
+        const response = await fetch('api/users/' + userId, {
           method: 'PUT',
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            id: userId,
             name: userName,
-            token: generateToken(userName),
           }),
         });
         if (response.ok === true) {
@@ -142,31 +196,46 @@
           }
         );
         if (response.ok === true) {
-          const user = await response.json();
-          document.querySelector("tr[data-rowid='" + user.id + "']").remove();
+          document.querySelector("tr[data-rowid='" + id + "']").remove();
         }
       }
 
       // Видалення токена
-      async function DeleteToken(userId, userName) {
-        const response = await fetch('api/users', {
-          method: 'PUT',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            id: userId,
-            name: userName,
-            token: '',
-          }),
+      async function DeleteToken(userId) {
+        let tokenId;
+        GetTokenByUserId(userId)
+          .then((token) => {
+            if (token.length > 0) {
+              tokenId = token[token.length - 1].id;
+              DeleteTokenById(userId, tokenId);
+            } else {
+              console.log('Токенів немає');
+            }
+          })
+          .catch((error) => {
+            console.log('Помилка отримання токена: ', error);
+          });
+      }
+
+      // const response = await fetch('api/tokens?id=' + userId + '', {
+      //           method: 'DELETE',
+      //           headers: { Accept: 'application/json' },
+      //         });
+      //         if (response.ok === true) {
+      //           document.querySelector(
+      //             "td[data-token='" + userId + "']"
+      //           ).textContent = '';
+      //         }
+
+      async function DeleteTokenById(userId, tokenId) {
+        const response = await fetch('/api/tokens/' + tokenId, {
+          method: 'DELETE',
+          headers: { Accept: 'application/json' },
         });
         if (response.ok === true) {
-          const user = await response.json();
-          reset();
-          document
-            .querySelector("tr[data-rowid='" + user.id + "']")
-            .replaceWith(row(user));
+          document.querySelector(
+            "td[data-token='" + userId + "']"
+          ).textContent = '';
         }
       }
 
@@ -190,12 +259,13 @@
         tr.append(nameTd);
 
         const tokenTd = document.createElement('td');
-        tokenTd.append(user.token);
+        tokenTd.setAttribute('data-token', user.id);
         tr.append(tokenTd);
 
         const linksTd = document.createElement('td');
 
         const editLink = document.createElement('a');
+        editLink.className = 'btn btn-sm btn-primary';
         editLink.setAttribute('data-id', user.id);
         editLink.setAttribute('style', 'cursor:pointer;padding:15px;');
         editLink.append("Змінити ім'я");
@@ -206,6 +276,7 @@
         linksTd.append(editLink);
 
         const removeLink = document.createElement('a');
+        removeLink.className = 'btn btn-sm btn-danger';
         removeLink.setAttribute('data-id', user.id);
         removeLink.setAttribute('style', 'cursor:pointer;padding:15px;');
         removeLink.append('Видалити користувача');
@@ -216,6 +287,7 @@
         linksTd.append(removeLink);
 
         const createTokenLink = document.createElement('a');
+        createTokenLink.className = 'btn btn-sm btn-primary';
         createTokenLink.setAttribute('data-id', user.id);
         createTokenLink.setAttribute('style', 'cursor:pointer;padding:15px;');
         createTokenLink.append('Створити/змінити токен');
@@ -226,12 +298,13 @@
         linksTd.append(createTokenLink);
 
         const removeToken = document.createElement('a');
+        removeToken.className = 'btn btn-sm btn-danger';
         removeToken.setAttribute('data-id', user.id);
         removeToken.setAttribute('style', 'cursor:pointer;padding:15px;');
         removeToken.append('Видалити токен');
         removeToken.addEventListener('click', (e) => {
           e.preventDefault();
-          DeleteToken(user.id, user.name);
+          DeleteToken(user.id);
         });
         linksTd.append(removeToken);
 
@@ -255,7 +328,7 @@
       });
 
       // Завантаження користувачів
-      GetUsers();
+      CreateTable();
     </script>
   </body>
 </html>
