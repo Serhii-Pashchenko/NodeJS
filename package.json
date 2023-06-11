@@ -29,5 +29,8 @@
     "rimraf": "^5.0.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "mongoose": "^7.2.3"
   }
 }
