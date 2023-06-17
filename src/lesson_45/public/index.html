@@ -8,6 +8,12 @@
       href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <style>
+      td[data-token] {
+        width: 200px;
+        word-break: break-all;
+      }
+    </style>
   </head>
   <body>
     <h2>Список користувачів</h2>
@@ -81,12 +87,6 @@
         }
       }
 
-      // Генерація токену
-      const generateToken = (name) => {
-        const token = `${name}-${Math.random().toString(36).substr(2, 10)}`;
-        return token;
-      };
-
       async function CreateToken(_id, userId, userName) {
         const response = await fetch('api/tokens', {
           method: 'POST',
@@ -95,8 +95,8 @@
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            value: generateToken(userName),
             user_id: _id,
+            user_name: userName,
           }),
         });
         if (response.ok === true) {
@@ -126,7 +126,7 @@
       }
 
       // Додавання користувача
-      async function CreateUser(userName, token) {
+      async function CreateUser(userName) {
         const response = await fetch('api/users', {
           method: 'POST',
           headers: {
@@ -135,13 +135,26 @@
           },
           body: JSON.stringify({
             name: userName,
-            value: token,
           }),
         });
         if (response.ok === true) {
           const user = await response.json();
           reset();
           document.querySelector('tbody').append(row(user));
+          GetTokenByUserId(user._id)
+            .then((token) => {
+              const element = document.querySelector(
+                "td[data-token='" + user.id + "']"
+              );
+              if (element && token !== '') {
+                element.textContent = token[token.length - 1].value;
+              } else {
+                element.textContent = '';
+              }
+            })
+            .catch((error) => {
+              console.log('Помилка отримання токена: ', error);
+            });
         }
       }
 
@@ -312,7 +325,7 @@
         const id = form.elements['id'].value;
         const _id = form.elements['_id'].value;
         const name = form.elements['name'].value;
-        if (id == 0) CreateUser(name, generateToken(name));
+        if (id == 0) CreateUser(name);
         else EditUser(_id, id, name);
       });
 

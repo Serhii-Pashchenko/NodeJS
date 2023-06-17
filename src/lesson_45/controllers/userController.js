@@ -1,6 +1,8 @@
 const User = require('../models/user.js');
 const Token = require('../models/token.js');
 const Counter = require('../models/counter.js');
+const { validationResult } = require('express-validator');
+const jwt = require('jsonwebtoken');
 
 async function generateUserId() {
   const counter = await Counter.findOneAndUpdate(
@@ -18,10 +20,22 @@ async function generateUserId() {
   return counter.count;
 }
 
+const generateToken = (id, name) => {
+  return jwt.sign({ id, name }, 'secret', {
+    expiresIn: '1h',
+  });
+};
+
 class userController {
   async createUser(req, res) {
     try {
-      const { name, value } = req.body;
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res
+          .status(400)
+          .json({ message: 'Невірні дані для створення користувача', errors });
+      }
+      const { name } = req.body;
 
       const newUser = new User({
         id: await generateUserId(),
@@ -29,9 +43,11 @@ class userController {
       });
       await newUser.save();
 
+      const value = generateToken(newUser.id, name);
+
       const newToken = new Token({
         value,
-        user_id: newUser.id,
+        user: newUser._id,
       });
       await newToken.save();
 
@@ -61,6 +77,7 @@ class userController {
     const id = req.params.id;
     if (req.query.login === 'admin' && req.query.password === '12345') {
       const user = await User.findByIdAndDelete(id);
+      await Token.deleteMany({ user: id });
       res.json(user);
     } else {
       res

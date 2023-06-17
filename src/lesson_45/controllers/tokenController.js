@@ -1,11 +1,17 @@
 const Token = require('../models/token.js');
 const User = require('../models/user.js');
+const jwt = require('jsonwebtoken');
 
+const generateToken = (id, name) => {
+  return jwt.sign({ id, name }, 'secret', {
+    expiresIn: '1h',
+  });
+};
 class TokenController {
   async createToken(req, res) {
-    const { value, user_id } = req.body;
+    const { user_id, user_name } = req.body;
     const newToken = new Token({
-      value,
+      value: generateToken(user_id, user_name),
       user: user_id,
     });
     await newToken.save();
