@@ -63,11 +63,11 @@
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
-      var socket = io();
+      let socket = io();
 
-      var messages = document.getElementById('messages');
-      var form = document.getElementById('form');
-      var input = document.getElementById('input');
+      let messages = document.getElementById('messages');
+      let form = document.getElementById('form');
+      let input = document.getElementById('input');
 
       form.addEventListener('submit', function (e) {
         e.preventDefault();
