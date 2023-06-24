@@ -54,44 +54,16 @@
         background: #efefef;
       }
     </style>
-    <script src="/socket.io/socket.io.js"></script>
   </head>
   <body>
-    <h1>Webcam Streaming</h1>
-    <video id="video" autoplay></video>
     <ul id="messages"></ul>
     <form id="form" action="">
       <input id="input" autocomplete="off" /><button>Send</button>
     </form>
+    <script src="/socket.io/socket.io.js"></script>
 
     <script>
-      const socket = io();
-
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then((stream) => {
-          const video = document.getElementById('video');
-          video.srcObject = stream;
-
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-
-          setInterval(() => {
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const imageData = canvas.toDataURL('image/jpeg');
-            socket.emit('image', imageData);
-          }, 100);
-        })
-        .catch((error) => {
-          console.error('Error accessing webcam:', error);
-        });
-
-      socket.on('image', (data) => {
-        const image = document.getElementById('remote-image');
-        image.src = data;
-      });
+      let socket = io();
 
       let messages = document.getElementById('messages');
       let form = document.getElementById('form');

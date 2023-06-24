@@ -2,7 +2,7 @@
 const { ServiceSchemaError } = require("moleculer").Errors;
 const { Server } = require("http");
 const { ServiceBroker } = require("moleculer");
-const { io } = require("socket.io");
+const { Server: SocketServer } = require("socket.io");
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -26,15 +26,12 @@ module.exports = {
 	 */
 	actions: {
 		/**
-		 * Say a 'Hello' action.
-		 *
-		 * @returns
+		 * WebSocket action.
 		 */
-
 		websocket: {
 			rest: {
 				method: "GET",
-				path: "/",
+				path: "/websocket",
 			},
 			async handler(ctx) {
 				const dataSize = 3 * 1024 * 1024;
@@ -43,8 +40,8 @@ module.exports = {
 					return data;
 				}
 
-				const httpServer = await ctx.call("http.getServer");
-				const socketServer = io(httpServer);
+				const httpServer = ctx.broker.getServer("http");
+				const socketServer = new SocketServer(httpServer);
 
 				socketServer.on("connection", (socket) => {
 					console.log("Новий клієнт підключився!");

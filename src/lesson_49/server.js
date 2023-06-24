@@ -24,6 +24,10 @@ io.on('connection', (socket) => {
     console.log('Клієнт відключився!');
   });
 
+  socket.on('image', (data) => {
+    socket.broadcast.emit('image', data);
+  });
+
   const data = generateLargeData(dataSize);
 
   socket.on('requestData', () => {
